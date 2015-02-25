@@ -1,0 +1,34 @@
+. ~/loadpyAMI.sh
+
+
+#
+
+ami list data --fields events,run --type NTUP_TAU --stream physics_Muons %p1130
+ami list data --fields run,events --type NTUP_TAU --stream physics_Muons %p1130 | cut -d ' ' -f1,3
+ami list data --fields run,events --type NTUP_TAU --stream physics_Muons %p1130 | tr -s ' ' | cut -d ' ' -f 1,2
+ami list data --fields run,events --type NTUP_TAU --stream physics_Muons %p1130 | tr -s ' ' | cut -d ' ' -f 1,2 | tr ' ' ':'
+ami list data --fields run,events --type NTUP_TAU --stream physics_Muons %p1130 | tr -s ' ' | cut -d ' ' -f 1,2 | tr ' ' ':' | sed "s/$/,/g" | sort
+
+ami list data --fields run,events --type NTUP_TAU --stream physics_Muons %p1130_p1131 | tr -s ' ' | cut -d ' ' -f 1,2 | tr ' ' ':' | sed "s/$/,/g" | sort
+
+
+# test
+ami list datasets --type ESD --project data12_8TeV --stream physics_Muons
+ami list datasets --type NTUP_TAU --project data12_8TeV --stream physics_Muons
+ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods D1
+ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods D1 --latest
+ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods D1 --latest --fields events 
+ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods I --latest | sort
+
+#list periods
+ami list periods -y 2012 -l 2
+
+# list runs per period
+ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods A --latest
+
+import sys
+import os
+periods=['A', 'B', 'C', 'D', 'E']
+for iPeriod in periods:
+  cmd = 'ami list data --type NTUP_TAU --project data12_8TeV --stream physics_Muons --periods iPeriod --latest'
+  os.system(cmd)

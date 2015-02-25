@@ -1,0 +1,63 @@
+#! /usr/bin/env python
+"""
+Module checkForDuplicates 
+  check for duplicate events (events with same RunNumber 
+  and EventNumber) from data files
+
+"""
+
+import optparse
+import subprocess
+import os
+import re
+import ROOT
+from glob import glob
+from EventMap import EventMap
+from genEventList import check_events 
+
+## Configuration
+def main():
+  # Load Parser
+  usage = "usage: %prog [options] INPUT_FILES"
+  parser = optparse.OptionParser(usage=usage)
+
+  # Set Options
+  parser.add_option("-t", "--tree", dest="tree", metavar="TREE", 
+      help="specify the TREE name" )
+  parser.add_option("-n", "--nevents", dest="nevents", metavar="MAX", type=int, 
+      help="specify the MAX number of events" )
+
+  # Set Defaults 
+  parser.set_defaults( tree = 'tau' )
+  parser.set_defaults( nevents = -1 )
+
+  # Parse Args
+  (options,args) = parser.parse_args()
+
+  # Check that INPUT_FILE is specified
+  if not len(args) > 0:
+    print 'ERROR - Must provide INPUT_FILES'
+    parser.print_help()
+    exit(1)
+
+  # collect options
+  files = []
+  for arg in args: files += glob(arg)
+   
+  check_events( files, _tree_name = options.tree, _max_events = options.nevents )
+
+
+if __name__=='__main__': main()
+
+
+
+
+
+
+
+
+
+
+
+
+

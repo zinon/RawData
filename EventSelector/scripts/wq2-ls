@@ -1,0 +1,76 @@
+#! /usr/bin/env python
+"""
+Module createContainer 
+  improved dq2-ls splits up unique and duplicated datasets 
+
+"""
+
+import optparse
+import subprocess
+import os
+import re
+from DQ2Tool import DQ2Tool
+
+
+## Configuration
+############################################################
+
+
+def main():
+  # Load Parser
+  usage = "usage: %prog [options] SEARCH_STRING"
+  parser = optparse.OptionParser(usage=usage)
+
+  # Set Options
+  parser.add_option("-c", "--contents", dest="contents", action="store_true", default=False,  
+      help="display the contents of any container" )
+
+  # Set Defaults 
+  #parser.set_defaults( checking = False )
+
+  # Parse Args
+  (options,args) = parser.parse_args()
+
+  # Check for search string
+  if len(args) < 1 : 
+    print "ERROR - Must provide search string"
+    parser.print_help()
+    exit(1)
+
+  ## Load dq2 tool
+  dq2 = DQ2Tool()
+
+  ## Run
+  ########################################################
+  input_containers = dq2.lsArray( args )
+  overlap, unique, junk = dq2.getOverlappingDatasets( input_containers ) 
+
+  if options.contents: unique = dq2.getContainerArrayContents(unique)
+  # Summaries datasets
+  print
+  print '# Unique datasets:'
+  for dataset_name in unique:
+    print dataset_name
+
+  print 
+  print '# Overlapping datasets:'
+  for entry in overlap: 
+    print '#%s:'%entry
+    for dataset_name in overlap[entry]:
+      print '  ',dataset_name
+
+  print 
+  print '# Junk datasets:'
+  for dataset_name in junk:
+    print dataset_name
+
+
+
+if __name__ == '__main__': main()
+
+
+
+
+
+
+

@@ -1,0 +1,129 @@
+#! /usr/bin/env python
+"""Module genInputXML.py 
+  For generating input XML config files from a list of files 
+
+"""
+import optparse
+import ROOT
+import os
+def createFileEntry( writer, filename ):
+  writer.write( '<In FileName="%s" Lumi="1."/>\n'%filename )
+
+def correctSuffix( filename ):
+  if filename.count( '.xml' ):
+    filename = filename.replace('.xml','')
+    filename = filename + '.xml'
+  return filename
+
+# Load Parser
+usage = "usage: %prog [options] -o OUTPUT FILES"
+parser = optparse.OptionParser(usage=usage)
+
+# Set Options
+parser.add_option("-o", "--output", dest="output", metavar="OUTPUT", 
+    help="specify the OUTPUT xml config file" )
+parser.add_option("-t", "--tree", dest="tree", metavar="TREE", 
+    help="specify the TREE in the input files (will switch on tree checking)" )
+parser.add_option("-c", "--checking", dest="checking", action="store_true", 
+    help="turn on event number checking" )
+parser.add_option("-n", "--nmax", dest="nmax", type=int, metavar="NMAX", 
+    help="specify the maximum number of files per split" )
+
+# Set Defaults 
+parser.set_defaults( checking = False )
+
+# Parse Args
+(options,args) = parser.parse_args()
+
+# Check that OUTPUT is specified
+if not options.output:
+  print 'ERROR - Must provide output xml config file'
+  parser.print_help()
+  exit(1)
+
+# Check for input file list
+if len(args) < 1 : 
+  print "ERROR - Must provide input file list"
+  parser.print_help()
+  exit(1)
+
+
+if options.tree:
+  print 'Switched on tree checking for tree: %s'%options.tree
+  if options.checking:
+    print 'switched on event number checking'
+
+
+nsplit = 0
+nfiles = 0
+
+## Open OUTPUT file
+outFileName = options.output
+if options.nmax: 
+  outFileName = '%s.sub%d'%(options.output,nsplit)
+  outFileName = correctSuffix( outFileName )
+outFile = open( outFileName, 'w' )
+print 'created output file: ', outFileName
+
+
+
+for file in args:
+  print 'chekcing %s ...'%file
+  f = ROOT.TFile.Open( file )
+  if not f or not f.IsOpen(): 
+    print 'WARNING - Invalid file!'
+    continue
+  if f.IsZombie():
+    print 'WARNING - Zombie file!'
+    f.Close()
+    continue
+  if f.TestBit(ROOT.TFile.kRecovered):
+    print 'WARNING - File failed in loading'
+    f.Close()
+    continue
+  if options.tree:
+    t = f.Get(options.tree)
+    if not t:
+      print 'WARNINIG - file doesnt contain: %s'%options.tree
+      continue
+
+    if options.checking:
+      entries = t.GetEntries()
+      print 'got entries: ', entries
+
+  nfiles += 1
+  if options.nmax != None and nfiles > options.nmax:
+    nfiles = 0
+    nsplit += 1
+    outFile.close()
+    outFileName = '%s.sub%d'%(options.output,nsplit)
+    outFileName = correctSuffix( outFileName )
+    outFile = open( outFileName, 'w' )
+    print ''
+    print 'created output file: ', outFileName
+
+
+  # get absolute path
+  abspath = os.path.abspath( file )
+
+  # add abspath
+  createFileEntry( outFile, abspath )
+
+  print 'adding file: %s'%abspath
+  f.Close()
+
+
+
+
+
+
+
+
+
+
+
+#EOF
+
+ 
+
+

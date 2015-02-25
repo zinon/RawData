@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+"""Module launchNtupGen.py
+  For launching PyAnalysis to the grid via prun
+
+"""
+from AnalysisMod import AnalysisMod
+
+if __name__=="__main__":
+  job = AnalysisMod()
+  job.launch()
+
+
+

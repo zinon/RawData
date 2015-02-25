@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+"""Module launchNtupGen.py
+  For launching CoEPPNtupGen to the grid via prun
+
+"""
+from NtupGenMod import NtupGenMod
+
+if __name__=="__main__":
+  job = NtupGenMod()
+  job.launch()
+
+
+

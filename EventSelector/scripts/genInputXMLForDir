@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+"""Module genInputXML.py 
+  For generating input XML config files from a list of files 
+
+"""
+import optparse
+import ROOT
+import os
+import re
+
+def getDirs( path ):
+  return [ name for name in os.listdir(path) if os.path.isdir(os.path.join(path,name) ) ]
+
+
+# Load Parser
+usage = "usage: %prog [options]"
+parser = optparse.OptionParser(usage=usage)
+
+# Set Options
+parser.add_option("-s", "--start", dest="start", metavar="PREFIX", 
+    help="specify the directory PREFIXes" )
+parser.add_option("-e", "--end", dest="end", metavar="POSTFIX", 
+    help="specify the directory POSTFIXes" )
+parser.add_option("-p", "--path", dest="path", metavar="PATH", 
+    help="specify the PATH to the directories" )
+parser.add_option("-t", "--tree", dest="tree", metavar="TREE", 
+    help="specify the TREE in the input files (will switch on tree checking)" )
+parser.add_option("-c", "--checking", dest="checking", action="store_true", 
+    help="turn on event number checking" )
+
+
+# Set Defaults 
+parser.set_defaults( path  = './')
+parser.set_defaults( start = '')
+parser.set_defaults( end   = '')
+parser.set_defaults( checking = False )
+
+# Parse Args
+(options,args) = parser.parse_args()
+
+
+dirs = getDirs( options.path )
+names = set()
+for dir in dirs:
+  m = re.search( '^(%s)(.*)(%s)'%(options.start,options.end), dir )
+  if m:
+#    print 'dir: %s matches %s.*%s'%(dir,options.start,options.end )
+#    print 'group0 ', m.group(0)
+#    print 'group1 ', m.group(1)
+#    print 'group2 ', m.group(2)
+#    print 'group3 ', m.group(3)
+    names.add( m.group(2) )
+
+for dir in names:
+  files_str = ' %s/%s%s.*/*.root'%(options.path,options.start,dir)
+  command_str ='genInputXML.py'
+  command_str += ' -o config.%s.xml'%dir
+  
+  if options.tree: 
+    command_str += ' -t %s'%options.tree
+    if options.checking: command_str += ' -c'
+
+  command_str += files_str
+ 
+  print 'command line str: ', command_str
+  os.system( command_str )
+
+
+
+
+
+
+
+
+#EOF
+
+ 
+
+

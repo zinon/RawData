@@ -1,0 +1,138 @@
+#! /usr/bin/env python
+"""Module inactiveSamples
+  Helps get information about inactive samples 
+
+"""
+
+import optparse
+import Samples
+import subprocess
+from DQ2Tool import DQ2Tool
+import re
+
+
+
+def main():
+ 
+  usage = "usage: %prog "
+  parser = optparse.OptionParser(usage=usage)
+
+  ## Define Sample Config
+  opt_samples = optparse.OptionGroup( parser, 'Sample Selection', 'Options to specify sample list, if none, all will be selected' )
+  opt_samples.add_option("-s","--sample",  dest="sample", metavar="SAMPLE", 
+                    help="SAMPLE to run on")
+  opt_samples.add_option("-t","--tag",     dest="tag",    metavar="TAG",    
+                    help="TAG specifier for SAMPLE dataset")
+  opt_samples.add_option("-i", "--inactive", dest="inactive", action="store_true",    
+                    help="only search inactive samples")
+  opt_samples.add_option("-a", "--active", dest="active", action="store_true",    
+                    help="only search active samples")
+
+ 
+  ## Define Actions Config
+  opt_actions = optparse.OptionGroup( parser, 'Actions', 'Options to specify which actions to perform' )
+  opt_actions.add_option("--sites",     dest="sites",  action="store_true", 
+                    help="find available sites")
+  opt_actions.add_option("--empty",     dest="empty",  action="store_true", 
+                    help="list empty containers")
+  opt_actions.add_option("--non-empty",     dest="empty",  action="store_false", 
+                    help="list non-empty containers")
+  opt_actions.add_option("-v", "--verbose",     dest="verbose",  action="store_true",      
+                    help="turn on verbose mode")
+  
+  # add groups
+  parser.add_option_group( opt_samples )
+  parser.add_option_group( opt_actions )
+
+  # set defaults
+  parser.set_defaults( sites = False )
+  parser.set_defaults( verbose = False )
+  parser.set_defaults( active = False )
+  parser.set_defaults( inactive = False )
+
+  (options,args) = parser.parse_args()
+  
+  ## Instantiate DQ2Tool
+  dq2 = DQ2Tool()
+  dq2.verbose = options.verbose
+
+  # Get Samples
+  samples = Samples.getSampleList()
+  
+  # record if action performed 
+  actionPerformed = False
+
+  # Get Requested Samples
+  sample_list = []
+  if options.sample:
+    if not options.tag:
+      print 'ERROR - must provide tag if specifying sample!'
+      parser.print_help()
+      exit(1)
+    sample = samples.get( options.sample, options.tag )
+    if not sample:
+      print 'ERROR - tag: %s, not found for sample: %s, listing all inactive samples...'
+      samples.summary()
+      exit(1)
+    sample_list.append(sample)
+  elif options.tag:
+    tag_list = samples.getSamplesWithTag( options.tag, reqIsActive = False )
+    for sample_name in tag_list:
+      sample = samples.get( sample_name, options.tag )
+      if sample: sample_list.append( sample )
+  else:
+    sample_list += samples.samples
+
+
+  # Apply additional selection to container
+  selected_samples = []
+  for sample in sample_list:
+    #print 'sample: ', sample.name, '  active: ', sample.isActive
+    if options.inactive and sample.isActive: continue 
+    if options.active and not sample.isActive: continue
+    selected_samples.append(sample)
+
+  # Perform requested actions
+  container_names = [ sample.dataset for sample in selected_samples ]
+  if options.empty != None:
+    actionPerformed = True
+    if options.empty == True:
+      print 'getting empty containers...'
+      empty_containers = dq2.getEmptyContainers( container_names )
+      if empty_containers:
+        print 
+        print 'Empty Container Summary:'
+        for name in empty_containers: print name
+      else:
+        print 'No Empty Containers Found!'
+    else: 
+      print 'getting non-empty containers...'
+      non_empty_containers = dq2.getNonEmptyContainers( container_names )
+      if non_empty_containers:
+        print 
+        print 'Non-Empty Container Summary:'
+        for name in non_empty_containers: print name
+      else:
+        print 'No Non-Empty Containers Found!'
+
+
+  if options.sites:
+    actionPerformed = True
+    for sample in selected_samples:
+      sample.summary()
+      sites = dq2.findSites( sample )
+      if sites: print 'found sites: ', sites
+
+
+  
+
+  if not actionPerformed:
+    parser.print_help()
+    exit(1)
+
+
+
+
+
+if __name__=='__main__': main()
+

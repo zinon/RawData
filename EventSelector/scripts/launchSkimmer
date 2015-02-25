@@ -1,0 +1,13 @@
+#! /usr/bin/env python
+"""Module launchNtupGen.py
+  For launching PySkimmers to the grid via prun
+
+"""
+from SkimmerMod import SkimmerMod
+
+if __name__=="__main__":
+  job = SkimmerMod()
+  job.launch()
+
+
+

@@ -1,0 +1,69 @@
+#! /usr/bin/env python
+"""
+Module createContainer 
+  improved dq2-ls splits up unique and duplicated datasets 
+
+"""
+
+import optparse
+import subprocess
+import os
+import re
+from DQ2Tool import DQ2Tool
+
+
+## Configuration
+############################################################
+
+
+def main():
+  # Load Parser
+  usage = "usage: %prog -s SITES DATASET"
+  parser = optparse.OptionParser(usage=usage)
+
+  # Set Options
+  parser.add_option("-s", "--sites", dest="sites", metavar="SITES", 
+      help="comma seperated list of SITES to remove dataset from" )
+
+  # Set Defaults 
+  #parser.set_defaults( checking = False )
+
+  # Parse Args
+  (options,args) = parser.parse_args()
+
+  # Check for search string
+  if len(args) < 1 : 
+    print "ERROR - Must provide DATASET"
+    parser.print_help()
+    exit(1)
+
+  # check site defined
+  #if not options.sites:
+  #  print "ERROR - Must provide comma seperated list of SITES to delete dataset from"
+  #  parser.print_help()
+  #  exit(1)
+
+  ## Load dq2 tool
+  dq2 = DQ2Tool()
+
+
+  ## Run
+  ########################################################
+  input_containers = dq2.lsArray( args )
+  for container in input_containers:
+    if not options.sites: dq2.deleteDatasetReplica( container, '-all' ) 
+    else:
+      sites = options.sites.split(',')
+      print 'sites: ', sites
+      dq2.deleteDatasetReplica( container, sites ) 
+
+
+
+if __name__ == '__main__': main()
+
+
+
+
+
+
+

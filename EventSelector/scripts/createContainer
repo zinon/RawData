@@ -1,0 +1,75 @@
+#! /usr/bin/env python
+"""
+Module createContainer 
+  create dq2 containers out of input containers 
+
+"""
+
+import optparse
+import subprocess
+import os
+import re
+from DQ2Tool import DQ2Tool
+
+
+## Configuration
+############################################################
+
+
+def main():
+  # Load Parser
+  usage = "usage: %prog [options] -o OUTPUT FILES"
+  parser = optparse.OptionParser(usage=usage)
+
+  # Set Options
+  parser.add_option("-o", "--output", dest="output", metavar="OUTPUT", 
+      help="specify the OUTPUT container name" )
+
+  # Set Defaults 
+  #parser.set_defaults( checking = False )
+
+  # Parse Args
+  (options,args) = parser.parse_args()
+
+  # Check that OUTPUT is specified
+  if not options.output:
+    print 'ERROR - Must provide output container name'
+    parser.print_help()
+    exit(1)
+
+  # Check for input file list
+  if len(args) < 1 : 
+    print "ERROR - Must provide list of input dq2 datasets/containers"
+    parser.print_help()
+    exit(1)
+
+  ## Load dq2 tool
+  dq2 = DQ2Tool()
+
+  ## Run
+  ########################################################
+  input_containers = dq2.lsArray( args )
+  datasets = dq2.getContainerArrayContents( input_containers )
+
+  # Summaries datasets
+  print
+  print 'Got datasets: '
+  for dataset in datasets:
+    print dataset
+  
+  # Create Container
+  container_name = options.output
+  dq2.registerContainer(container_name)
+  
+  # Add datasets
+  dq2.addDatasetArrayToContainer(container_name, datasets)
+
+
+if __name__ == '__main__': main()
+
+
+
+
+
+
+

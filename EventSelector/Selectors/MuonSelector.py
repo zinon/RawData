@@ -1,0 +1,86 @@
+from ParticleBase import ParticleBase
+from ParticleSelector import ParticleSelector
+
+class MuonSelector(ParticleSelector):
+  def __init__(self):
+    ParticleSelector.__init__(self)
+    self.min_pt           = 15000.
+    self.max_eta          = 3.
+    self.req_tight        = False
+    self.req_combined     = False  # True standard
+    self.max_z0           = 99999. # 10. standard
+    self.req_trt_cleaning = False  # True standard
+    self.min_BLHits       = -1     # 1 standard
+    self.min_PixHits      = -1     # 2 standard
+    self.min_SCTHits      = -1     # 6 standard
+    self.max_SCTHoles     = 999999 # 1 standard
+    self.max_nucone40     = 999999
+    self.max_ptcone40rel  = 999999.
+    self.max_etcone20rel  = 999999.
+
+
+  def whoami(self):
+     return "MuonSelector"
+
+  def select(self):
+    self.clear_particles()
+    
+    # require TTree to be loaded
+    if not self.ch:
+      print 'Warning, no input TTree'
+      return 
+
+#    print 'mu_staco_n: ', self.ch.mu_staco_n
+    # Loop over mu_stacos and select candidates
+    for i in range(0,self.ch.mu_staco_n):
+      p = ParticleBase( _index = i, 
+                    _pt  = self.ch.mu_staco_pt[i],
+                    _eta = self.ch.mu_staco_eta[i],
+                    _phi = self.ch.mu_staco_phi[i],
+                    _m   = self.ch.mu_staco_m[i] )
+      
+      if p.Pt()       < self.min_pt : continue
+      if abs(p.Eta()) > self.max_eta: continue
+
+      if self.req_tight:
+        if not self.ch.mu_staco_tight[i]: continue
+
+      if self.req_combined:
+        if not self.ch.mu_staco_isCombinedMuon[i]: continue
+      
+      if self.ch.mu_staco_z0_exPV[i] >= self.max_z0: continue
+      
+      if self.ch.mu_staco_nBLHits[i] < self.min_BLHits: continue
+      if (self.ch.mu_staco_nPixHits[i] 
+            + self.ch.mu_staco_nPixelDeadSensors[i] 
+            < self.min_PixHits): continue
+      if (self.ch.mu_staco_nSCTHits[i] 
+            + self.ch.mu_staco_nSCTDeadSensors[i] 
+            < self.min_SCTHits): continue
+      if self.ch.mu_staco_nSCTHoles[i] > self.max_SCTHoles: continue
+
+
+      # Isolation
+      if self.ch.mu_staco_nucone40[i] > self.max_nucone40: continue
+      if self.ch.mu_staco_ptcone40[i]/p.Pt() > self.max_ptcone40rel: continue
+      if self.ch.mu_staco_etcone20[i]/p.Pt() > self.max_etcone20rel: continue
+
+
+      # TRT cleaning
+      if self.req_trt_cleaning:
+        abs_eta = abs(p.Eta())
+        n_Hits_TRT = self.ch.mu_staco_nTRTHits[i]
+        n_Hits_TRT_Outliers = self.ch.mu_staco_nTRTOutliers[i]
+        n_Hits_TRT_and_Outliers = n_Hits_TRT_Outliers + n_Hits_TRT
+        if abs_eta < 1.9:
+          if not ( n_Hits_TRT_and_Outliers > 5 and float(n_Hits_TRT_Outliers)/float(n_Hits_TRT_and_Outliers) < 0.9 ): continue
+        elif abs_eta >= 1.9 and n_Hits_TRT_and_Outliers>5 and float(n_Hits_TRT_Outliers)/ float(n_Hits_TRT_and_Outliers) > 0.9: continue
+
+
+
+      self.add_particle(p)
+    
+
+    self.sort_particles()
+
+    return self.get_particles()

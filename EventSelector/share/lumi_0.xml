@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<!DOCTYPE LumiRangeCollection SYSTEM "http://atlas-runquery.cern.ch/LumiRangeCollection.dtd"><!--This document is created by GoodRunsListWriter.--><LumiRangeCollection><NamedLumiRange><Name>LumiBlocks_GoodDQ0</Name><Version>10</Version><Metadata Name="Description">luminosity_uniquegrlselector</Metadata><LumiBlockCollection><Run>207531</Run><LBRange Start="232" End="232"/></LumiBlockCollection></NamedLumiRange></LumiRangeCollection>

@@ -1,0 +1,1 @@
+2012-10-15: /afs/cern.ch/work/z/zenon/TauTrigRawSkim/EventSelector/scripts/launchSkimmer --setup=setup.sh --all-samples -t r17p851_DATA --postfix=ZtautauEventCountingForTauIDBDTl --nFilesPerJob=10 -v4 share/eventCounterZtautau_ID_r17.py
